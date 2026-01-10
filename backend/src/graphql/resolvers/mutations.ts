@@ -1,0 +1,104 @@
+import bcrypt from 'bcryptjs';
+import jwt from 'jsonwebtoken';
+import User from '../../models/User';
+import Sale from '../../models/Sale';
+import Product from '../../models/Product';
+import { pubsub, EVENTS } from '../subscriptions/pubsub';
+
+interface Context {
+  user?: { id: string; email: string; role: string };
+}
+
+export const mutationResolvers = {
+  login: async (_: any, { email, password }: { email: string; password: string }) => {
+    const user = await User.findOne({ email: email.toLowerCase() });
+    if (!user) {
+      throw new Error('Invalid email or password');
+    }
+
+    const isValidPassword = await bcrypt.compare(password, user.password);
+    if (!isValidPassword) {
+      throw new Error('Invalid email or password');
+    }
+
+    // Update last login
+    user.lastLogin = new Date();
+    await user.save();
+
+    const token = jwt.sign(
+      { id: user._id, email: user.email, role: user.role },
+      process.env.JWT_SECRET || 'default-secret',
+      { expiresIn: '7d' }
+    );
+
+    return {
+      token,
+      user,
+    };
+  },
+
+  register: async (_: any, { email, password, name }: { email: string; password: string; name: string }) => {
+    const existingUser = await User.findOne({ email: email.toLowerCase() });
+    if (existingUser) {
+      throw new Error('User with this email already exists');
+    }
+
+    const hashedPassword = await bcrypt.hash(password, 10);
+
+    const user = await User.create({
+      email: email.toLowerCase(),
+      password: hashedPassword,
+      name,
+      role: 'viewer', // Default role
+    });
+
+    const token = jwt.sign(
+      { id: user._id, email: user.email, role: user.role },
+      process.env.JWT_SECRET || 'default-secret',
+      { expiresIn: '7d' }
+    );
+
+    return {
+      token,
+      user,
+    };
+  },
+
+  createSale: async (
+    _: any,
+    { productId, amount, quantity, userId }: { productId: string; amount: number; quantity: number; userId: string },
+    context: Context
+  ) => {
+    if (!context.user) throw new Error('Not authenticated');
+    if (context.user.role !== 'admin') throw new Error('Not authorized');
+
+    const product = await Product.findById(productId);
+    if (!product) {
+      throw new Error('Product not found');
+    }
+
+    const sale = await Sale.create({
+      productId: product.id,
+      productName: product.name,
+      category: product.category,
+      amount,
+      quantity,
+      userId,
+      status: 'completed',
+      timestamp: new Date(),
+    });
+
+    // Update product statistics
+    product.totalSales += quantity;
+    product.revenue += amount;
+    product.lastSold = new Date();
+    await product.save();
+
+    // Publish subscription
+    pubsub.publish(EVENTS.NEW_SALE, {
+      newSale: sale,
+    });
+
+    return sale;
+  },
+};
