@@ -1,6 +1,5 @@
-import { sub
+import { subDays } from 'date-fns';
 
-Days, startOfDay, format } from 'date-fns';
 import Metric from '../../models/Metric';
 import Sale from '../../models/Sale';
 import Product from '../../models/Product';
