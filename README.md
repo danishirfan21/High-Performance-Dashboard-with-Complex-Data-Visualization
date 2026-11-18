@@ -14,6 +14,7 @@ A full-stack analytics dashboard with live metric updates over GraphQL subscript
 - **Server-side aggregation** - MongoDB aggregation pipelines for all chart data.
 - **Auth** - JWT login/registration with bcrypt, `viewer` and `admin` roles. `createSale` is admin-only. Queries, subscriptions and exports require a valid token.
 - **Safety limits** - Paginated list queries are capped at 500 rows; product sort fields are whitelisted.
+- **Rate limiting** - `login` is limited to 5 attempts per email and 20 per IP per 15 minutes; `register` to 5 per IP per hour. Counters live in Redis (in-memory fallback if Redis is down); a successful login clears the email counter.
 - **System theme** - Light/dark follows the OS preference (no manual toggle yet).
 
 ### Not implemented yet
@@ -149,7 +150,7 @@ Frontend: `npm run dev`, `npm run build`, `npm start`, `npm run lint`.
 
 ## Known Issues / Roadmap
 
-- Registration and login have no rate limiting.
+- Rate limits are keyed on `req.ip`; behind a reverse proxy you must configure Express `trust proxy`, otherwise all users share the proxy's IP.
 - GraphQL introspection is enabled in all environments.
 - CSV export writes a temp file instead of streaming.
 - No automated tests yet (Jest and Playwright are configured but no suites exist).

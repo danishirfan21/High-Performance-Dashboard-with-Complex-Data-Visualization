@@ -54,7 +54,7 @@ const apolloServer = new ApolloServer({
     // Extract user from JWT token
     const token = req.headers.authorization?.replace('Bearer ', '');
     const user = authMiddleware.verifyToken(token);
-    return { user };
+    return { user, ip: req.ip };
   },
   introspection: true,
   cache: 'bounded',
@@ -77,7 +77,7 @@ const serverCleanup = useServer(
       // Extract token from connection params
       const token = (ctx.connectionParams as any)?.authorization?.replace('Bearer ', '');
       const user = authMiddleware.verifyToken(token);
-      return { user };
+      return { user, ip: (ctx.extra as any)?.request?.socket?.remoteAddress };
     },
     onConnect: () => {
       console.log('Client connected to GraphQL subscriptions');

@@ -6,14 +6,21 @@ import Product from '../../models/Product';
 import { pubsub, EVENTS } from '../subscriptions/pubsub';
 import { getJwtSecret } from '../../middleware/auth';
 import { invalidateCache } from '../../utils/cache';
+import { enforceRateLimit, resetRateLimit, LIMITS } from '../../utils/rateLimit';
 
 export interface Context {
   user?: { id: string; email: string; role: string };
+  ip?: string;
 }
 
 export const mutationResolvers = {
-  login: async (_: any, { email, password }: { email: string; password: string }) => {
-    const user = await User.findOne({ email: email.toLowerCase() });
+  login: async (_: any, { email, password }: { email: string; password: string }, context: Context) => {
+    const normalizedEmail = email.toLowerCase();
+    const emailKey = `login:email:${normalizedEmail}`;
+    await enforceRateLimit(`login:ip:${context.ip ?? 'unknown'}`, LIMITS.loginIp);
+    await enforceRateLimit(emailKey, LIMITS.loginEmail);
+
+    const user = await User.findOne({ email: normalizedEmail });
     if (!user) {
       throw new Error('Invalid email or password');
     }
@@ -22,6 +29,8 @@ export const mutationResolvers = {
     if (!isValidPassword) {
       throw new Error('Invalid email or password');
     }
+
+    await resetRateLimit(emailKey);
 
     // Update last login
     user.lastLogin = new Date();
@@ -39,7 +48,13 @@ export const mutationResolvers = {
     };
   },
 
-  register: async (_: any, { email, password, name }: { email: string; password: string; name: string }) => {
+  register: async (
+    _: any,
+    { email, password, name }: { email: string; password: string; name: string },
+    context: Context
+  ) => {
+    await enforceRateLimit(`register:ip:${context.ip ?? 'unknown'}`, LIMITS.registerIp);
+
     const existingUser = await User.findOne({ email: email.toLowerCase() });
     if (existingUser) {
       throw new Error('User with this email already exists');
