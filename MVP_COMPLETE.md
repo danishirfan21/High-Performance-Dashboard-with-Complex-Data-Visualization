@@ -25,6 +25,9 @@ The Minimum Viable Product is now **100% complete** and ready to run.
 ### Data Table
 - ✅ Products table with virtual scrolling (100+ products)
 - ✅ Real-time search with debouncing
+- ✅ Server-side column sorting
+- ✅ "Export CSV" button (products)
+- ✅ Redis caching of aggregation queries
 - ✅ Responsive grid layout
 - ✅ Smooth 60fps scrolling
 
@@ -40,7 +43,9 @@ The Minimum Viable Product is now **100% complete** and ready to run.
 ### Option 1: Docker (Recommended)
 ```bash
 cd docker
-docker-compose up --build
+cp .env.example .env   # set MONGO_PASSWORD and JWT_SECRET (16+ chars)
+docker compose up --build
+docker compose exec backend npm run seed   # first run only
 ```
 
 Wait 2-3 minutes, then visit:
@@ -52,6 +57,7 @@ Wait 2-3 minutes, then visit:
 **Terminal 1 - Backend:**
 ```bash
 cd backend
+cp .env.example .env   # set JWT_SECRET (16+ chars)
 npm run seed    # First time only
 npm run dev
 ```
@@ -99,7 +105,7 @@ Use these credentials:
 - ✅ All 3 charts render with real data
 - ✅ Products table virtualizes smoothly
 - ✅ Search filters products in real-time
-- ✅ Theme system (dark/light) working
+- ✅ Theme follows system dark/light preference
 
 ---
 
@@ -173,9 +179,10 @@ frontend/components/
 ## 🐛 Known Limitations (MVP)
 
 - No date range picker (uses default 30 days)
-- No CSV export button (endpoint exists)
+- No sales CSV export button (products export is available)
 - No sidebar navigation
-- No theme toggle button
+- No theme toggle button (follows system setting)
+- No automated tests
 - No widget visibility controls
 - No activity heatmap (skipped for MVP)
 
@@ -189,7 +196,6 @@ These can be added in ~6-8 hours for the full version.
 1. Sidebar navigation (2h)
 2. Theme toggle component (1h)
 3. Date range picker (2h)
-4. Export CSV button (1h)
 5. Activity heatmap (2h)
 6. Performance optimizations (2h)
 7. Testing (6h)
