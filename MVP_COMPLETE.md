@@ -114,7 +114,7 @@ Use these credentials:
 ```
 frontend/app/
 ├── login/page.tsx                    # Login form
-├── (dashboard)/
+├── dashboard/
 │   ├── layout.tsx                    # Protected wrapper
 │   └── page.tsx                      # Main dashboard
 └── page.tsx                          # Root redirect

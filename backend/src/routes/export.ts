@@ -20,10 +20,13 @@ router.get('/sales', authenticateJWT, async (req, res) => {
 
     const query: any = {};
     if (startDate && endDate) {
-      query.timestamp = {
-        $gte: new Date(startDate as string),
-        $lte: new Date(endDate as string),
-      };
+      const start = new Date(startDate as string);
+      const end = new Date(endDate as string);
+      if (isNaN(start.getTime()) || isNaN(end.getTime())) {
+        res.status(400).json({ error: 'Invalid startDate or endDate' });
+        return;
+      }
+      query.timestamp = { $gte: start, $lte: end };
     }
 
     const sales = await Sale.find(query).lean();

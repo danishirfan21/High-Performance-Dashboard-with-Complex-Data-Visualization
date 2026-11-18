@@ -91,6 +91,9 @@ export const mutationResolvers = {
     if (!context.user) throw new Error('Not authenticated');
     if (context.user.role !== 'admin') throw new Error('Not authorized');
 
+    if (!Number.isFinite(amount) || amount <= 0) throw new Error('Amount must be a positive number');
+    if (!Number.isInteger(quantity) || quantity <= 0) throw new Error('Quantity must be a positive whole number');
+
     const product = await Product.findById(productId);
     if (!product) {
       throw new Error('Product not found');

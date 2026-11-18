@@ -36,7 +36,7 @@ Date range picker UI (the dashboard uses a default 30-day range), activity heatm
 
 ```
 frontend/                  Next.js app
-  app/                     Routes: login, (dashboard)
+  app/                     Routes: login, dashboard
   components/              cards, charts, tables, layout, ui
   hooks/                   useRealTimeMetrics, useDebounce, useOptimisticUpdate
   lib/                     apollo-client, axios-client, utils

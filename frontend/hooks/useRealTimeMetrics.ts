@@ -44,9 +44,10 @@ export function useRealTimeMetrics(type?: string, onUpdate?: (data: MetricData) 
       const metric = data.metricUpdated as MetricData;
 
       // Show toast notification
+      const typeName = metric.type.toLowerCase();
       const changeSign = (metric.changePercent ?? 0) > 0 ? '+' : '';
       toast.success(
-        `${metric.type.charAt(0).toUpperCase() + metric.type.slice(1)} Updated`,
+        `${typeName.charAt(0).toUpperCase() + typeName.slice(1)} Updated`,
         {
           description: `New value: ${metric.value.toFixed(2)} (${changeSign}${(metric.changePercent ?? 0).toFixed(1)}%)`,
           duration: 3000,
