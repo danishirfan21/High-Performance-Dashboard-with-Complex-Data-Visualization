@@ -17,6 +17,9 @@ import { authMiddleware } from './middleware/auth';
 import restRoutes from './routes';
 import { startMetricSimulator } from './utils/metricSimulator';
 
+// Fail fast if the JWT secret is missing or too short
+authMiddleware.getJwtSecret();
+
 const app = express();
 const httpServer = createServer(app);
 

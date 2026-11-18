@@ -7,11 +7,19 @@ interface JWTPayload {
   role: string;
 }
 
+export const getJwtSecret = (): string => {
+  const secret = process.env.JWT_SECRET;
+  if (!secret || secret.length < 16) {
+    throw new Error('JWT_SECRET must be set (at least 16 characters)');
+  }
+  return secret;
+};
+
 export const verifyToken = (token?: string): JWTPayload | null => {
   if (!token) return null;
 
   try {
-    const decoded = jwt.verify(token, process.env.JWT_SECRET || 'default-secret') as JWTPayload;
+    const decoded = jwt.verify(token, getJwtSecret()) as JWTPayload;
     return decoded;
   } catch (error) {
     return null;
@@ -43,6 +51,7 @@ export const requireAdmin = (req: Request, res: Response, next: NextFunction) =>
 };
 
 export const authMiddleware = {
+  getJwtSecret,
   verifyToken,
   authenticateJWT,
   requireAdmin,

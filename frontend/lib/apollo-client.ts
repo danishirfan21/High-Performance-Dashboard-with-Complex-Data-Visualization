@@ -2,11 +2,11 @@ import { ApolloClient, InMemoryCache, HttpLink, split, from } from '@apollo/clie
 import { GraphQLWsLink } from '@apollo/client/link/subscriptions';
 import { getMainDefinition } from '@apollo/client/utilities';
 import { onError } from '@apollo/client/link/error';
+import { setContext } from '@apollo/client/link/context';
 import { createClient } from 'graphql-ws';
 
 const httpLink = new HttpLink({
   uri: process.env.NEXT_PUBLIC_GRAPHQL_URL || 'http://localhost:4000/graphql',
-  credentials: 'same-origin',
 });
 
 // Error handling link
@@ -22,8 +22,19 @@ const errorLink = onError(({ graphQLErrors, networkError }) => {
 });
 
 // Auth link to add token to headers
+const authContextLink = setContext((_, { headers }) => {
+  const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
+  return {
+    headers: {
+      ...headers,
+      ...(token ? { authorization: `Bearer ${token}` } : {}),
+    },
+  };
+});
+
 const authLink = from([
   errorLink,
+  authContextLink,
   httpLink,
 ]);
 

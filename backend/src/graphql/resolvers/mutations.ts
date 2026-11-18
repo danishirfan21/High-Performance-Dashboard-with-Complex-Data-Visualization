@@ -4,6 +4,7 @@ import User from '../../models/User';
 import Sale from '../../models/Sale';
 import Product from '../../models/Product';
 import { pubsub, EVENTS } from '../subscriptions/pubsub';
+import { getJwtSecret } from '../../middleware/auth';
 
 interface Context {
   user?: { id: string; email: string; role: string };
@@ -26,8 +27,8 @@ export const mutationResolvers = {
     await user.save();
 
     const token = jwt.sign(
-      { id: user._id, email: user.email, role: user.role },
-      process.env.JWT_SECRET || 'default-secret',
+      { id: user.id, email: user.email, role: user.role },
+      getJwtSecret(),
       { expiresIn: '7d' }
     );
 
@@ -53,8 +54,8 @@ export const mutationResolvers = {
     });
 
     const token = jwt.sign(
-      { id: user._id, email: user.email, role: user.role },
-      process.env.JWT_SECRET || 'default-secret',
+      { id: user.id, email: user.email, role: user.role },
+      getJwtSecret(),
       { expiresIn: '7d' }
     );
 

@@ -6,10 +6,10 @@ services:
     container_name: analytics-mongo
     restart: unless-stopped
     ports:
-      - "27017:27017"
+      - "127.0.0.1:27017:27017"
     environment:
       MONGO_INITDB_ROOT_USERNAME: admin
-      MONGO_INITDB_ROOT_PASSWORD: password123
+      MONGO_INITDB_ROOT_PASSWORD: ${MONGO_PASSWORD:?Set MONGO_PASSWORD in docker/.env}
       MONGO_INITDB_DATABASE: analytics
     volumes:
       - mongodb_data:/data/db
@@ -21,7 +21,7 @@ services:
     container_name: analytics-redis
     restart: unless-stopped
     ports:
-      - "6379:6379"
+      - "127.0.0.1:6379:6379"
     command: redis-server --appendonly yes
     volumes:
       - redis_data:/data
@@ -39,9 +39,9 @@ services:
     environment:
       NODE_ENV: production
       PORT: 4000
-      MONGODB_URI: mongodb://admin:password123@mongodb:27017/analytics?authSource=admin
+      MONGODB_URI: mongodb://admin:${MONGO_PASSWORD:?Set MONGO_PASSWORD in docker/.env}@mongodb:27017/analytics?authSource=admin
       REDIS_URL: redis://redis:6379
-      JWT_SECRET: your-super-secret-jwt-key-change-in-production-12345
+      JWT_SECRET: ${JWT_SECRET:?Set JWT_SECRET in docker/.env}
       FRONTEND_URL: http://localhost:3000
     depends_on:
       - mongodb
