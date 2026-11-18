@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import { useSubscription, gql } from '@apollo/client';
 import { toast } from 'sonner';
 
@@ -32,6 +32,13 @@ export function useRealTimeMetrics(type?: string, onUpdate?: (data: MetricData) 
     skip: typeof window === 'undefined',
   });
 
+  // Keep the latest callback in a ref so an inline callback (which changes every
+  // render) doesn't re-trigger the effect and cause a toast/refetch loop.
+  const onUpdateRef = useRef(onUpdate);
+  useEffect(() => {
+    onUpdateRef.current = onUpdate;
+  });
+
   useEffect(() => {
     if (data?.metricUpdated) {
       const metric = data.metricUpdated as MetricData;
@@ -47,9 +54,9 @@ export function useRealTimeMetrics(type?: string, onUpdate?: (data: MetricData) 
       );
 
       // Call callback if provided
-      onUpdate?.(metric);
+      onUpdateRef.current?.(metric);
     }
-  }, [data, onUpdate]);
+  }, [data]);
 
   return { data: data?.metricUpdated, loading, error };
 }
