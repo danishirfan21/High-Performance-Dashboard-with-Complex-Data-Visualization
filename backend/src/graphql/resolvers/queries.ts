@@ -9,6 +9,15 @@ interface Context {
   user?: { id: string; email: string; role: string };
 }
 
+const MAX_PAGE_SIZE = 500;
+const DEFAULT_PAGE_SIZE = 100;
+const PRODUCT_SORT_FIELDS = ['name', 'category', 'price', 'stock', 'totalSales', 'revenue', 'rating', 'lastSold'];
+
+const clampPagination = (limit?: number | null, offset?: number | null) => ({
+  limit: Math.min(Math.max(Math.floor(limit ?? DEFAULT_PAGE_SIZE), 1), MAX_PAGE_SIZE),
+  offset: Math.max(Math.floor(offset ?? 0), 0),
+});
+
 export const queryResolvers = {
   me: async (_: any, __: any, context: Context) => {
     if (!context.user) throw new Error('Not authenticated');
@@ -200,20 +209,22 @@ export const queryResolvers = {
     return sales;
   },
 
-  getProducts: async (_: any, { filter, limit = 100, offset = 0 }: any, context: Context) => {
+  getProducts: async (_: any, { filter, limit, offset }: any, context: Context) => {
     if (!context.user) throw new Error('Not authenticated');
+
+    const page = clampPagination(limit, offset);
 
     const query: any = {};
     if (filter?.category) query.category = filter.category;
     if (filter?.minRevenue) query.revenue = { $gte: filter.minRevenue };
 
-    const sortBy = filter?.sortBy || 'revenue';
+    const sortBy = PRODUCT_SORT_FIELDS.includes(filter?.sortBy) ? filter.sortBy : 'revenue';
     const sortOrder = filter?.sortOrder === 'asc' ? 1 : -1;
 
     return await Product.find(query)
       .sort({ [sortBy]: sortOrder })
-      .limit(limit)
-      .skip(offset)
+      .limit(page.limit)
+      .skip(page.offset)
       .lean();
   },
 
@@ -227,8 +238,10 @@ export const queryResolvers = {
     return await Product.countDocuments(query);
   },
 
-  getSales: async (_: any, { dateRange, limit = 100, offset = 0 }: any, context: Context) => {
+  getSales: async (_: any, { dateRange, limit, offset }: any, context: Context) => {
     if (!context.user) throw new Error('Not authenticated');
+
+    const page = clampPagination(limit, offset);
 
     const query: any = {};
     if (dateRange) {
@@ -240,8 +253,8 @@ export const queryResolvers = {
 
     return await Sale.find(query)
       .sort({ timestamp: -1 })
-      .limit(limit)
-      .skip(offset)
+      .limit(page.limit)
+      .skip(page.offset)
       .lean();
   },
 };
