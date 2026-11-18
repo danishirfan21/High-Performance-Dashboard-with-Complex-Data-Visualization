@@ -5,6 +5,7 @@ import Sale from '../../models/Sale';
 import Product from '../../models/Product';
 import { pubsub, EVENTS } from '../subscriptions/pubsub';
 import { getJwtSecret } from '../../middleware/auth';
+import { invalidateCache } from '../../utils/cache';
 
 interface Context {
   user?: { id: string; email: string; role: string };
@@ -53,6 +54,8 @@ export const mutationResolvers = {
       role: 'viewer', // Default role
     });
 
+    await invalidateCache('usergrowth');
+
     const token = jwt.sign(
       { id: user.id, email: user.email, role: user.role },
       getJwtSecret(),
@@ -94,6 +97,9 @@ export const mutationResolvers = {
     product.revenue += amount;
     product.lastSold = new Date();
     await product.save();
+
+    // Aggregated views are now stale
+    await invalidateCache();
 
     // Publish subscription
     pubsub.publish(EVENTS.NEW_SALE, {

@@ -80,8 +80,15 @@ export const apolloClient = new ApolloClient({
         fields: {
           getProducts: {
             keyArgs: ['filter'],
-            merge(existing = [], incoming) {
-              return [...existing, ...incoming];
+            // Place each page at its offset so refetches replace data
+            // instead of appending duplicates.
+            merge(existing = [], incoming, { args }) {
+              const offset = args?.offset ?? 0;
+              const merged = existing.slice(0);
+              for (let i = 0; i < incoming.length; i++) {
+                merged[offset + i] = incoming[i];
+              }
+              return merged;
             },
           },
         },

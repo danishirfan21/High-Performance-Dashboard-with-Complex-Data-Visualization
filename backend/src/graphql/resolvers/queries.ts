@@ -4,6 +4,7 @@ import Metric from '../../models/Metric';
 import Sale from '../../models/Sale';
 import Product from '../../models/Product';
 import User from '../../models/User';
+import { cached } from '../../utils/cache';
 
 interface Context {
   user?: { id: string; email: string; role: string };
@@ -12,6 +13,11 @@ interface Context {
 const MAX_PAGE_SIZE = 500;
 const DEFAULT_PAGE_SIZE = 100;
 const PRODUCT_SORT_FIELDS = ['name', 'category', 'price', 'stock', 'totalSales', 'revenue', 'rating', 'lastSold'];
+
+// Cache key for a date-ranged query. Dates are truncated to the hour so a
+// client sending `new Date()` as endDate still gets cache hits.
+const rangeKey = (name: string, dateRange: any) =>
+  `${name}:${String(dateRange.startDate).slice(0, 13)}:${String(dateRange.endDate).slice(0, 13)}`;
 
 const clampPagination = (limit?: number | null, offset?: number | null) => ({
   limit: Math.min(Math.max(Math.floor(limit ?? DEFAULT_PAGE_SIZE), 1), MAX_PAGE_SIZE),
@@ -57,7 +63,7 @@ export const queryResolvers = {
   getRevenueData: async (_: any, { dateRange }: any, context: Context) => {
     if (!context.user) throw new Error('Not authenticated');
 
-    const sales = await Sale.aggregate([
+    const sales = await cached(rangeKey('revenue', dateRange), () => Sale.aggregate([
       {
         $match: {
           timestamp: {
@@ -83,7 +89,7 @@ export const queryResolvers = {
           _id: 0,
         },
       },
-    ]);
+    ]));
 
     return sales;
   },
@@ -91,7 +97,7 @@ export const queryResolvers = {
   getCategorySales: async (_: any, { dateRange }: any, context: Context) => {
     if (!context.user) throw new Error('Not authenticated');
 
-    const sales = await Sale.aggregate([
+    const sales = await cached(rangeKey('category', dateRange), () => Sale.aggregate([
       {
         $match: {
           timestamp: {
@@ -116,7 +122,7 @@ export const queryResolvers = {
           _id: 0,
         },
       },
-    ]);
+    ]));
 
     // Calculate percentages
     const total = sales.reduce((sum, s) => sum + s.value, 0);
@@ -129,7 +135,7 @@ export const queryResolvers = {
   getUserGrowth: async (_: any, { dateRange }: any, context: Context) => {
     if (!context.user) throw new Error('Not authenticated');
 
-    const users = await User.aggregate([
+    const users = await cached(rangeKey('usergrowth', dateRange), () => User.aggregate([
       {
         $match: {
           createdAt: {
@@ -144,7 +150,7 @@ export const queryResolvers = {
         },
       },
       { $sort: { _id: 1 } },
-    ]);
+    ]));
 
     // Calculate cumulative totals
     let total = 0;
@@ -161,7 +167,7 @@ export const queryResolvers = {
   getActivityHeatmap: async (_: any, { dateRange }: any, context: Context) => {
     if (!context.user) throw new Error('Not authenticated');
 
-    const sales = await Sale.aggregate([
+    const sales = await cached(rangeKey('heatmap', dateRange), () => Sale.aggregate([
       {
         $match: {
           timestamp: {
@@ -204,7 +210,7 @@ export const queryResolvers = {
           _id: 0,
         },
       },
-    ]);
+    ]));
 
     return sales;
   },
