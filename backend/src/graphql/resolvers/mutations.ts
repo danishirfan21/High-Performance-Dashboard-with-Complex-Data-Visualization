@@ -7,7 +7,7 @@ import { pubsub, EVENTS } from '../subscriptions/pubsub';
 import { getJwtSecret } from '../../middleware/auth';
 import { invalidateCache } from '../../utils/cache';
 
-interface Context {
+export interface Context {
   user?: { id: string; email: string; role: string };
 }
 

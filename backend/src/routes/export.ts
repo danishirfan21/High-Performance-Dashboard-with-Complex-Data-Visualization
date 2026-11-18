@@ -55,7 +55,7 @@ router.get('/sales', authenticateJWT, async (req, res) => {
   }
 });
 
-router.get('/products', authenticateJWT, async (req, res) => {
+router.get('/products', authenticateJWT, async (_req, res) => {
   try {
     const products = await Product.find().sort({ revenue: -1 }).lean();
 

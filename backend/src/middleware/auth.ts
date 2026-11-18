@@ -26,25 +26,27 @@ export const verifyToken = (token?: string): JWTPayload | null => {
   }
 };
 
-export const authenticateJWT = (req: Request, res: Response, next: NextFunction) => {
+export const authenticateJWT = (req: Request, res: Response, next: NextFunction): void => {
   const authHeader = req.headers.authorization;
   const token = authHeader?.replace('Bearer ', '');
 
   const user = verifyToken(token);
 
   if (!user) {
-    return res.status(401).json({ error: 'Unauthorized' });
+    res.status(401).json({ error: 'Unauthorized' });
+    return;
   }
 
   (req as any).user = user;
   next();
 };
 
-export const requireAdmin = (req: Request, res: Response, next: NextFunction) => {
+export const requireAdmin = (req: Request, res: Response, next: NextFunction): void => {
   const user = (req as any).user;
 
   if (!user || user.role !== 'admin') {
-    return res.status(403).json({ error: 'Forbidden - Admin access required' });
+    res.status(403).json({ error: 'Forbidden - Admin access required' });
+    return;
   }
 
   next();

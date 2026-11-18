@@ -1,7 +1,6 @@
 import 'dotenv/config';
-import mongoose from 'mongoose';
 import bcrypt from 'bcryptjs';
-import { subDays, subHours, format } from 'date-fns';
+import { subDays, subHours } from 'date-fns';
 import User from '../models/User';
 import Product from '../models/Product';
 import Sale from '../models/Sale';
@@ -146,7 +145,7 @@ export async function seedDatabase() {
 
     // 5. Seed Metrics (daily for last 90 days)
     console.log('📈 Seeding metrics...');
-    const metrics = [];
+    const metrics: any[] = [];
 
     for (let day = 90; day >= 0; day--) {
       const date = subDays(now, day);

@@ -1,7 +1,7 @@
 import { withFilter } from 'graphql-subscriptions';
 import { pubsub, EVENTS } from '../subscriptions/pubsub';
 
-interface Context {
+export interface Context {
   user?: { id: string; email: string; role: string } | null;
 }
 

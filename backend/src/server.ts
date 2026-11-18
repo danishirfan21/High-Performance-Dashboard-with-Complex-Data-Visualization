@@ -93,7 +93,7 @@ const serverCleanup = useServer(
 app.use('/api', restRoutes);
 
 // Root health check
-app.get('/', (req, res) => {
+app.get('/', (_req, res) => {
   res.json({
     message: 'Analytics Dashboard API',
     status: 'running',
@@ -118,7 +118,7 @@ const startServer = async () => {
     // Start Apollo Server
     await apolloServer.start();
     apolloServer.applyMiddleware({
-      app,
+      app: app as any, // duplicate @types/express versions make Express/Application mismatch
       path: '/graphql',
       cors: false, // Already handled above
     });

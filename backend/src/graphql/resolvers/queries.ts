@@ -1,12 +1,10 @@
-import { subDays } from 'date-fns';
-
 import Metric from '../../models/Metric';
 import Sale from '../../models/Sale';
 import Product from '../../models/Product';
 import User from '../../models/User';
 import { cached } from '../../utils/cache';
 
-interface Context {
+export interface Context {
   user?: { id: string; email: string; role: string };
 }
 
@@ -34,7 +32,6 @@ export const queryResolvers = {
     if (!context.user) throw new Error('Not authenticated');
 
     const endDate = dateRange?.endDate ? new Date(dateRange.endDate) : new Date();
-    const startDate = dateRange?.startDate ? new Date(dateRange.startDate) : subDays(endDate, 30);
 
     // Fetch latest metrics for each type
     const [revenue, users, conversion, growth] = await Promise.all([
